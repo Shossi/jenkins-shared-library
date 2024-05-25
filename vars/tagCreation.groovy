@@ -3,6 +3,7 @@ import jenkins.model.Jenkins
 import hudson.model.ParametersDefinitionProperty
 
 def call(String jobname, String versionType, String stage) {
+    echo "tagCreation called with jobname: ${jobname}, versionType: ${versionType}, stage: ${stage}"
     def TAG
     if ("${stage}" == "get") {
         TAG = getTag(jobname, versionType, "get")
