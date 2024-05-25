@@ -74,4 +74,3 @@ def updateVersionParameter(job, newValue) {
         println "Parameter 'PreviousVersion' not found"
     }
 }
-
