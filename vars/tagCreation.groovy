@@ -28,9 +28,12 @@ def getTag(String jobname, String versionType, String stage) {
                     println "Next version is ${nextValue}"
                     TAG = "${nextValue}"
                 } else {
-                    param.defaultValue = getUpdatedVersion(versionType, param.defaultValue)
-                    println "Version successfully set to ${param.defaultValue}"
-                    TAG = "${param.defaultValue}"
+                    def newValue = getUpdatedVersion(versionType, param.defaultValue)
+                    param.defaultValue = newValue
+                    println "Version successfully set to ${newValue}"
+                    TAG = "${newValue}"
+                    // Save changes
+                    job.save()
                 }
             }
         }
@@ -60,4 +63,3 @@ def getUpdatedVersion(String versionType, String currentVersion) {
     }
     return split.join('.')
 }
-
