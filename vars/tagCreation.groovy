@@ -24,7 +24,8 @@ def getTag(String jobname, String versionType, String stage) {
         paramsDef.parameterDefinitions.each { param ->
             if ("PreviousVersion".equals(param.name)) {
                 println "Current version is ${param.defaultValue}"
-                def currentVersion = param.defaultValue
+                def currentVersion = param.defaultValue.toString().replaceAll(/.*PreviousVersion='(\d+\.\d+\.\d+)'.*/, '$1')
+                println "Parsed current version is ${currentVersion}"
                 if (stage == "get") {
                     def nextValue = getUpdatedVersion(versionType, currentVersion)
                     println "Next version is ${nextValue}"
