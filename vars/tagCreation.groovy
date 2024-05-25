@@ -1,7 +1,7 @@
 // vars/tagCreation.groovy
 import jenkins.model.Jenkins
 import hudson.model.ParametersDefinitionProperty
-import hudson.model.StringParameterDefinition
+import hudson.model.StringParameterValue
 
 def call(String jobname, String versionType, String stage) {
     println "tagCreation called with jobname: ${jobname}, versionType: ${versionType}, stage: ${stage}"
@@ -24,12 +24,13 @@ def getTag(String jobname, String versionType, String stage) {
         paramsDef.parameterDefinitions.each { param ->
             if ("PreviousVersion".equals(param.name)) {
                 println "Current version is ${param.defaultValue}"
+                def currentVersion = param.defaultValue
                 if (stage == "get") {
-                    def nextValue = getUpdatedVersion(versionType, param.defaultValue)
+                    def nextValue = getUpdatedVersion(versionType, currentVersion)
                     println "Next version is ${nextValue}"
                     TAG = "${nextValue}"
                 } else {
-                    def newValue = getUpdatedVersion(versionType, param.defaultValue)
+                    def newValue = getUpdatedVersion(versionType, currentVersion)
                     updateVersionParameter(job, newValue)
                     println "Version successfully set to ${newValue}"
                     TAG = "${newValue}"
@@ -42,25 +43,36 @@ def getTag(String jobname, String versionType, String stage) {
 
 @NonCPS
 def getUpdatedVersion(String versionType, String currentVersion) {
-    def split = currentVersion.split('\\.')
+    def versionParts = currentVersion.tokenize('.')
+    if (versionParts.size() != 3) {
+        error "Invalid version format: ${currentVersion}"
+    }
+
+    def major = versionParts[0].toInteger()
+    def minor = versionParts[1].toInteger()
+    def patch = versionParts[2].toInteger()
+
     switch (versionType) {
         case "Patch":
             println "Updating patch version"
-            split[2] = 1 + Integer.parseInt(split[2])
+            patch += 1
             break
         case "Minor":
             println "Updating minor version"
-            split[2] = 0
-            split[1] = 1 + Integer.parseInt(split[1])
+            patch = 0
+            minor += 1
             break
         case "Major":
             println "Updating major version"
-            split[2] = 0
-            split[1] = 0
-            split[0] = 1 + Integer.parseInt(split[0])
+            patch = 0
+            minor = 0
+            major += 1
             break
+        default:
+            error "Unknown version type: ${versionType}"
     }
-    return split.join('.')
+
+    return "${major}.${minor}.${patch}"
 }
 
 @NonCPS
