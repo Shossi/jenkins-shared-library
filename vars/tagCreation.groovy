@@ -1,6 +1,7 @@
 // vars/tagCreation.groovy
 import jenkins.model.Jenkins
 import hudson.model.ParametersDefinitionProperty
+import hudson.model.StringParameterDefinition
 
 def call(String jobname, String versionType, String stage) {
     println "tagCreation called with jobname: ${jobname}, versionType: ${versionType}, stage: ${stage}"
@@ -16,7 +17,7 @@ def call(String jobname, String versionType, String stage) {
 @NonCPS
 def getTag(String jobname, String versionType, String stage) {
     def jenkins = Jenkins.getInstance()
-    def job = Jenkins.instance.getItemByFullName(jobname)
+    def job = jenkins.getItemByFullName(jobname)
     def TAG = "0.0.0"
     def paramsDef = job.getProperty(ParametersDefinitionProperty.class)
     if (paramsDef) {
@@ -29,11 +30,9 @@ def getTag(String jobname, String versionType, String stage) {
                     TAG = "${nextValue}"
                 } else {
                     def newValue = getUpdatedVersion(versionType, param.defaultValue)
-                    param.defaultValue = newValue
+                    updateVersionParameter(job, newValue)
                     println "Version successfully set to ${newValue}"
                     TAG = "${newValue}"
-                    // Save changes
-                    job.save()
                 }
             }
         }
@@ -63,3 +62,16 @@ def getUpdatedVersion(String versionType, String currentVersion) {
     }
     return split.join('.')
 }
+
+@NonCPS
+def updateVersionParameter(job, newValue) {
+    def paramsDef = job.getProperty(ParametersDefinitionProperty.class)
+    def param = paramsDef.getParameterDefinition("PreviousVersion")
+    if (param) {
+        param.defaultValue = new StringParameterValue(param.name, newValue)
+        job.save()
+    } else {
+        println "Parameter 'PreviousVersion' not found"
+    }
+}
+
